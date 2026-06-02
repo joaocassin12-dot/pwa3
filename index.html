@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Meu Assistente</title>
+
+  <meta name="description" content="Seu assistente pessoal de lembretes" />
+  <meta name="theme-color" content="#4F46E5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Assistente" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" href="icons/icon-192.png" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --accent: #4F46E5;
+      --accent-light: #EEF2FF;
+      --accent-text: #3730A3;
+      --bg: #F8F7FF;
+      --surface: #FFFFFF;
+      --border: #E5E3F3;
+      --text: #1C1B2E;
+      --text2: #6B6890;
+      --text3: #9D9BBB;
+      --danger: #EF4444;
+      --danger-bg: #FEF2F2;
+      --warn: #F59E0B;
+      --warn-bg: #FFFBEB;
+      --success: #10B981;
+      --success-bg: #ECFDF5;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0F0E1A;
+        --surface: #1A1928;
+        --border: #2A2840;
+        --text: #F0EEFF;
+        --text2: #9490C0;
+        --text3: #5A5880;
+        --accent-light: #1E1B3A;
+        --accent-text: #A5B4FC;
+        --danger-bg: #2D1515;
+        --warn-bg: #2A1F05;
+        --success-bg: #0A2018;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: calc(var(--safe-top) + 14px) 16px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-icon {
+      width: 38px; height: 38px;
+      background: var(--accent);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .topbar-icon svg { width: 20px; height: 20px; color: #fff; }
+
+    .topbar-name { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-sub  { font-size: 12px; color: var(--text2); margin-top: 1px; }
+
+    .topbar-date {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text2);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+
+    /* ── MAIN ── */
+    .main { padding: 16px 16px calc(100px + var(--safe-bot)); }
+
+    /* ── STATS ── */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .15s;
+      -webkit-user-select: none; user-select: none;
+    }
+
+    .stat.active {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .stat-val { font-size: 20px; font-weight: 700; color: var(--text); }
+    .stat-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+    .stat.active .stat-val,
+    .stat.active .stat-lbl { color: #fff; }
+
+    /* ── SEARCH ── */
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 11px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--text3);
+      pointer-events: none;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 10px 12px 10px 34px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap input::placeholder { color: var(--text3); }
+
+    .filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text2);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* ── CHIPS ── */
+    .chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+
+    .chip {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text2);
+      cursor: pointer;
+      -webkit-user-select: none; user-select: none;
+    }
+
+    .chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    /* ── CARDS ── */
+    .list { display: flex; flex-direction: column; gap: 8px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: opacity .2s;
+    }
+
+    .card.done { opacity: .38; }
+    .card.done .card-title { text-decoration: line-through; }
+
+    .cat-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cat-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 99px;
+    }
+
+    .prio-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .date-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    .date-pill.late    { background: var(--danger-bg); color: var(--danger); }
+    .date-pill.today   { background: var(--warn-bg);   color: var(--warn); }
+    .date-pill.soon    { background: var(--success-bg); color: var(--success); }
+    .date-pill.normal  { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
+
+    .card-btns { display: flex; gap: 6px; }
+
+    .icon-btn {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text2);
+    }
+
+    .icon-btn svg { width: 15px; height: 15px; }
+    .icon-btn.green { color: var(--success); border-color: #6EE7B7; background: var(--success-bg); }
+    .icon-btn.red   { color: var(--danger);  border-color: #FCA5A5; background: var(--danger-bg); }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text2);
+      font-size: 14px;
+    }
+    .empty svg { width: 40px; height: 40px; opacity: .3; margin: 0 auto 10px; display: block; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: calc(20px + var(--safe-bot));
+      right: 20px;
+      width: 56px; height: 56px;
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(79,70,229,.4);
+      z-index: 40;
+      transition: transform .15s;
+    }
+    .fab:active { transform: scale(.93); }
+    .fab svg { width: 26px; height: 26px; color: #fff; }
+
+    /* ── BOTTOM SHEET / MODAL ── */
+    .sheet-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 60;
+      align-items: flex-end;
+    }
+    .sheet-overlay.open { display: flex; }
+
+    .sheet {
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 0 16px calc(24px + var(--safe-bot));
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    .sheet-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      margin: 14px auto 18px;
+    }
+
+    .sheet-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sheet-title svg { width: 20px; height: 20px; color: var(--accent); }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus { border-color: var(--accent); }
+
+    .field textarea { resize: vertical; min-height: 70px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .btn-save {
+      width: 100%;
+      padding: 15px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity .15s;
+    }
+    .btn-save:active { opacity: .85; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: calc(80px + var(--safe-bot));
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: var(--surface);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border-radius: 99px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── INSTALL BANNER ── */
+    .install-banner {
+      display: none;
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      align-items: center;
+      gap: 10px;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner-text { flex: 1; font-size: 13px; color: var(--accent-text); font-weight: 500; }
+    .install-banner-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .install-banner-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--accent-text); font-size: 18px; line-height: 1; padding: 0 2px;
+    }
+
+    select option { background: var(--surface); }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-icon">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="topbar-name">Meu Assistente</div>
+      <div class="topbar-sub" id="greeting">Olá!</div>
+    </div>
+    <div class="topbar-date" id="today-lbl"></div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- Install banner -->
+    <div class="install-banner" id="install-banner">
+      <div class="install-banner-text">Instale o app na sua tela inicial!</div>
+      <button class="install-banner-btn" id="install-btn">Instalar</button>
+      <button class="install-banner-close" id="install-close" aria-label="Fechar">×</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat active" id="qs-all" onclick="setFilter('all',this)">
+        <div class="stat-val" id="c-all">0</div>
+        <div class="stat-lbl">Todos</div>
+      </div>
+      <div class="stat" id="qs-hoje" onclick="setFilter('hoje',this)">
+        <div class="stat-val" id="c-hoje">0</div>
+        <div class="stat-lbl">Hoje</div>
+      </div>
+      <div class="stat" id="qs-atrasado" onclick="setFilter('atrasado',this)">
+        <div class="stat-val" id="c-atrasado">0</div>
+        <div class="stat-lbl">Atrasados</div>
+      </div>
+      <div class="stat" id="qs-semana" onclick="setFilter('semana',this)">
+        <div class="stat-val" id="c-semana">0</div>
+        <div class="stat-lbl">Semana</div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+        </svg>
+        <input type="search" id="search" placeholder="Buscar lembrete..." oninput="render()" />
+      </div>
+    </div>
+
+    <!-- Category chips -->
+    <div class="chips" id="chips">
+      <div class="chip active" onclick="setCat('',this)">Tudo</div>
+      <div class="chip" onclick="setCat('conta',this)">💳 Contas</div>
+      <div class="chip" onclick="setCat('estudo',this)">📚 Estudos</div>
+      <div class="chip" onclick="setCat('aniversario',this)">🎂 Aniversários</div>
+      <div class="chip" onclick="setCat('email',this)">📧 E-mail</div>
+      <div class="chip" onclick="setCat('saude',this)">❤️ Saúde</div>
+      <div class="chip" onclick="setCat('trabalho',this)">💼 Trabalho</div>
+      <div class="chip" onclick="setCat('pessoal',this)">👤 Pessoal</div>
+      <div class="chip" onclick="setCat('outro',this)">📌 Outro</div>
+    </div>
+
+    <div class="section-lbl" id="section-lbl">Lembretes</div>
+    <div class="list" id="list"></div>
+
+  </main>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openSheet()" aria-label="Novo lembrete">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+    </svg>
+  </button>
+
+  <!-- BOTTOM SHEET -->
+  <div class="sheet-overlay" id="sheet-overlay" role="dialog" aria-modal="true" aria-label="Novo lembrete">
+    <div class="sheet" id="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+        </svg>
+        <span id="sheet-title-text">Novo lembrete</span>
+      </div>
+
+      <div class="field">
+        <label>O que você quer lembrar? *</label>
+        <input type="text" id="f-title" placeholder="Ex: Ligar para o João, Prova de cálculo..." />
+      </div>
+
+      <div class="field">
+        <label>Nota (opcional)</label>
+        <textarea id="f-note" placeholder="Detalhes, observações..."></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Categoria</label>
+          <select id="f-cat" onchange="onCatChange()">
+            <option value="pessoal">👤 Pessoal</option>
+            <option value="conta">💳 Conta / Boleto</option>
+            <option value="estudo">📚 Estudos / Prova</option>
+            <option value="saude">❤️ Saúde</option>
+            <option value="trabalho">💼 Trabalho</option>
+            <option value="aniversario">🎂 Aniversário</option>
+            <option value="email">📧 E-mail</option>
+            <option value="outro">📌 Outro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Prioridade</label>
+          <select id="f-prio">
+            <option value="normal">Normal</option>
+            <option value="alta">🔴 Alta</option>
+            <option value="baixa">🔵 Baixa</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Data *</label>
+          <input type="date" id="f-date" />
+        </div>
+        <div class="field">
+          <label>Hora (opcional)</label>
+          <input type="time" id="f-time" />
+        </div>
+      </div>
+
+      <div class="field" id="valor-field" style="display:none">
+        <label>Valor (R$)</label>
+        <input type="number" id="f-valor" placeholder="0,00" min="0" step="0.01" />
+      </div>
+
+      <button class="btn-save" onclick="saveItem()">Salvar lembrete</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const KEY = 'assistente_pwa_v1';
+    let items = [], filter = 'all', catFilter = '', editId = null, deferredPrompt = null;
+
+    const CATS = {
+      conta:      { color: '#3B82F6', bg: '#EFF6FF', label: 'Conta' },
+      estudo:     { color: '#8B5CF6', bg: '#F5F3FF', label: 'Estudo' },
+      saude:      { color: '#10B981', bg: '#ECFDF5', label: 'Saúde' },
+      pessoal:    { color: '#EC4899', bg: '#FDF2F8', label: 'Pessoal' },
+      trabalho:   { color: '#6B7280', bg: '#F9FAFB', label: 'Trabalho' },
+      aniversario:{ color: '#F97316', bg: '#FFF7ED', label: 'Aniversário' },
+      email:      { color: '#EAB308', bg: '#FEFCE8', label: 'E-mail' },
+      outro:      { color: '#64748B', bg: '#F8FAFC', label: 'Outro' },
+    };
+
+    function load() {
+      try { items = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e) { items = []; }
+    }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(items)); } catch(e) {}
+    }
+
+    function todayStr() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function diffDays(date) {
+      const n = new Date(todayStr() + 'T00:00:00');
+      const d = new Date(date + 'T00:00:00');
+      return Math.round((d - n) / 86400000);
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-');
+      return `${d}/${m}`;
+    }
+
+    function greeting() {
+      const h = new Date().getHours();
+      if (h < 12) return 'Bom dia! ☀️';
+      if (h < 18) return 'Boa tarde! 🌤️';
+      return 'Boa noite! 🌙';
+    }
+
+    function setFilter(f, el) {
+      filter = f;
+      document.querySelectorAll('.stat').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function setCat(c, el) {
+      catFilter = c;
+      document.querySelectorAll('.chip').forEach(ch => ch.classList.remove('active'));
+      el.classList.add('active');
+      render();
+    }
+
+    function onCatChange() {
+      const v = document.getElementById('f-cat').value;
+      document.getElementById('valor-field').style.display = v === 'conta' ? 'block' : 'none';
+    }
+
+    function openSheet(id) {
+      editId = id || null;
+      if (id) {
+        const it = items.find(i => i.id === id);
+        if (!it) return;
+        document.getElementById('f-title').value = it.title;
+        document.getElementById('f-note').value = it.note || '';
+        document.getElementById('f-cat').value = it.cat;
+        document.getElementById('f-prio').value = it.prio || 'normal';
+        document.getElementById('f-date').value = it.date || '';
+        document.getElementById('f-time').value = it.time || '';
+        document.getElementById('f-valor').value = it.valor || '';
+        document.getElementById('valor-field').style.display = it.cat === 'conta' ? 'block' : 'none';
+        document.getElementById('sheet-title-text').textContent = 'Editar lembrete';
+      } else {
+        document.getElementById('f-title').value = '';
+        document.getElementById('f-note').value = '';
+        document.getElementById('f-cat').value = 'pessoal';
+        document.getElementById('f-prio').value = 'normal';
+        document.getElementById('f-date').value = '';
+        document.getElementById('f-time').value = '';
+        document.getElementById('f-valor').value = '';
+        document.getElementById('valor-field').style.display = 'none';
+        document.getElementById('sheet-title-text').textContent = 'Novo lembrete';
+      }
+      document.getElementById('sheet-overlay').classList.add('open');
+      setTimeout(() => document.getElementById('f-title').focus(), 80);
+    }
+
+    function closeSheet() {
+      document.getElementById('sheet-overlay').classList.remove('open');
+      editId = null;
+    }
+
+    function saveItem() {
+      const title = document.getElementById('f-title').value.trim();
+      const date  = document.getElementById('f-date').value;
+      if (!title) { toast('Digite um lembrete!'); return; }
+      if (!date)  { toast('Escolha uma data!'); return; }
+
+      const obj = {
+        id: editId || Date.now(),
+        title,
+        note:   document.getElementById('f-note').value.trim(),
+        cat:    document.getElementById('f-cat').value,
+        prio:   document.getElementById('f-prio').value,
+        date,
+        time:   document.getElementById('f-time').value,
+        valor:  parseFloat(document.getElementById('f-valor').value) || null,
+        done:   false,
+        created: todayStr(),
+      };
+
+      if (editId) {
+        const idx = items.findIndex(i => i.id === editId);
+        if (idx >= 0) { obj.done = items[idx].done; items[idx] = obj; }
+      } else {
+        items.push(obj);
+      }
+
+      save(); closeSheet(); render();
+      toast(editId ? 'Lembrete atualizado!' : 'Lembrete salvo!');
+    }
+
+    function toggleDone(id) {
+      const it = items.find(i => i.id === id);
+      if (it) { it.done = !it.done; save(); render(); }
+    }
+
+    function del(id) {
+      if (!confirm('Excluir este lembrete?')) return;
+      items = items.filter(i => i.id !== id);
+      save(); render(); toast('Lembrete excluído.');
+    }
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2400);
+    }
+
+    function dateBadge(it) {
+      if (!it.date) return { cls: 'normal', label: 'Sem data' };
+      const d = diffDays(it.date);
+      const time = it.time ? ' ' + it.time : '';
+      if (d < 0)  return { cls: 'late',   label: `Atrasado ${Math.abs(d)}d` };
+      if (d === 0) return { cls: 'today',  label: 'Hoje' + time };
+      if (d === 1) return { cls: 'soon',   label: 'Amanhã' + time };
+      if (d <= 7)  return { cls: 'soon',   label: `Em ${d}d` };
+      return         { cls: 'normal', label: fmtDate(it.date) + time };
+    }
+
+    function render() {
+      const t = todayStr();
+      const q = document.getElementById('search').value.toLowerCase();
+
+      let vis = items.filter(it => {
+        if (q && !it.title.toLowerCase().includes(q) && !(it.note||'').toLowerCase().includes(q)) return false;
+        if (catFilter && it.cat !== catFilter) return false;
+        if (filter === 'hoje'     && it.date !== t) return false;
+        if (filter === 'atrasado' && (it.done || !it.date || diffDays(it.date) >= 0)) return false;
+        if (filter === 'semana') { const d = diffDays(it.date); if (it.done || d < 0 || d > 7) return false; }
+        return true;
+      });
+
+      vis.sort((a, b) => {
+        if (a.done !== b.done) return a.done ? 1 : -1;
+        const p = {alta:0,normal:1,baixa:2};
+        if (p[a.prio] !== p[b.prio]) return p[a.prio] - p[b.prio];
+        return (a.date||'9999').localeCompare(b.date||'9999');
+      });
+
+      const pending = items.filter(i => !i.done);
+      document.getElementById('c-all').textContent     = pending.length;
+      document.getElementById('c-hoje').textContent    = pending.filter(i => i.date === t).length;
+      document.getElementById('c-atrasado').textContent= pending.filter(i => i.date && diffDays(i.date) < 0).length;
+      document.getElementById('c-semana').textContent  = pending.filter(i => i.date && diffDays(i.date) >= 0 && diffDays(i.date) <= 7).length;
+
+      document.getElementById('section-lbl').textContent = `${vis.length} lembrete${vis.length !== 1 ? 's' : ''}`;
+
+      const list = document.getElementById('list');
+
+      if (!vis.length) {
+        list.innerHTML = `
+          <div class="empty">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/>
+            </svg>
+            Nada aqui por enquanto.<br>Toque no <strong>+</strong> para adicionar.
+          </div>`;
+        return;
+      }
+
+      list.innerHTML = vis.map(it => {
+        const cat = CATS[it.cat] || CATS.outro;
+        const bd  = dateBadge(it);
+        const prioColor = {alta:'#EF4444', normal:'transparent', baixa:'#93C5FD'}[it.prio];
+        const valorTxt = it.valor ? ` · R$ ${it.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}` : '';
+        const noteTxt  = it.note ? `<span style="color:var(--text2)">${esc(it.note).substring(0,50)}${it.note.length>50?'…':''}</span>` : '';
+
+        return `
+          <div class="card${it.done?' done':''}">
+            <div class="cat-dot" style="background:${cat.color}"></div>
+            <div class="card-body">
+              <div class="card-title">${esc(it.title)}</div>
+              <div class="card-sub">
+                <span class="cat-pill" style="background:${cat.bg};color:${cat.color}">${cat.label}</span>
+                ${it.prio !== 'normal' ? `<span class="prio-dot" style="background:${prioColor}"></span>` : ''}
+                ${noteTxt}${valorTxt}
+              </div>
+            </div>
+            <div class="card-right">
+              <span class="date-pill ${bd.cls}">${bd.label}</span>
+              <div class="card-btns">
+                <button class="icon-btn green" onclick="toggleDone(${it.id})" aria-label="${it.done?'Reabrir':'Concluir'}">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    ${it.done
+                      ? '<path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>'
+                      : '<path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>'}
+                  </svg>
+                </button>
+                <button class="icon-btn" onclick="openSheet(${it.id})" aria-label="Editar">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/>
+                  </svg>
+                </button>
+                <button class="icon-btn red" onclick="del(${it.id})" aria-label="Excluir">
+                  <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function esc(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Fechar sheet ao clicar fora
+    document.getElementById('sheet-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeSheet();
+    });
+
+    // PWA Install
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install-banner').classList.add('show');
+    });
+
+    document.getElementById('install-btn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      document.getElementById('install-banner').classList.remove('show');
+      if (outcome === 'accepted') toast('App instalado com sucesso!');
+    });
+
+    document.getElementById('install-close').addEventListener('click', () => {
+      document.getElementById('install-banner').classList.remove('show');
+    });
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
+    // Init
+    document.getElementById('greeting').textContent = greeting();
+    document.getElementById('today-lbl').textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'short', day: '2-digit', month: 'short'
+    });
+
+    load();
+
+    if (!items.length) {
+      const t = todayStr();
+      const add = n => { const d = new Date(t+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; };
+      items = [
+        { id:1, title:'Verificar e-mails do trabalho', note:'Responder pendências', cat:'email', prio:'alta', date:add(0), time:'09:00', valor:null, done:false, created:t },
+        { id:2, title:'Feliz aniversário — João',       note:'Ligar ou mandar mensagem', cat:'aniversario', prio:'alta', date:add(1), time:'', valor:null, done:false, created:t },
+        { id:3, title:'Prova de cálculo',               note:'Estudar integral', cat:'estudo', prio:'alta', date:add(3), time:'14:00', valor:null, done:false, created:t },
+        { id:4, title:'Boleto Claro',                   note:'', cat:'conta', prio:'normal', date:add(2), time:'', valor:89.90, done:false, created:t },
+        { id:5, title:'Consulta médica',                note:'Levar exames', cat:'saude', prio:'normal', date:add(5), time:'10:30', valor:null, done:false, created:t },
+        { id:6, title:'Reunião com cliente',            note:'Apresentar proposta', cat:'trabalho', prio:'alta', date:add(-1), time:'15:00', valor:null, done:false, created:t },
+      ];
+      save();
+    }
+
+    render();
+  </script>
+</body>
+</html>
